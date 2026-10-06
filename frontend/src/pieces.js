@@ -64,6 +64,7 @@ export function groupMoves(history) {
 }
 
 const CAPTURE_ORDER = { p: 0, n: 1, b: 2, r: 3, q: 4, k: 5 };
+const START_COUNT = { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 };
 
 export function capturedPieces(history) {
   const whiteTook = [];
@@ -77,4 +78,24 @@ export function capturedPieces(history) {
   const sort = (list) =>
     [...list].sort((a, b) => CAPTURE_ORDER[a.type] - CAPTURE_ORDER[b.type]);
   return { whiteTook: sort(whiteTook), blackTook: sort(blackTook) };
+}
+
+export function capturedFromBoard(board) {
+  const remain = {
+    w: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 },
+    b: { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 },
+  };
+  for (const row of board || []) {
+    for (const p of row) {
+      if (p) remain[p.color][p.type] += 1;
+    }
+  }
+  const off = { w: [], b: [] };
+  for (const color of ["w", "b"]) {
+    for (const type of ["p", "n", "b", "r", "q"]) {
+      const missing = Math.max(0, START_COUNT[type] - remain[color][type]);
+      for (let i = 0; i < missing; i++) off[color].push({ color, type });
+    }
+  }
+  return off;
 }

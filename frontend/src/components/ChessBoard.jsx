@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
-import { parseFenBoard, pieceGlyph, squareName, capturedPieces } from "../pieces";
+import { parseFenBoard, pieceGlyph, squareName, capturedFromBoard } from "../pieces";
 import Piece3D from "./Piece3D.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
@@ -24,16 +24,17 @@ function sqPos(file, rank) {
 }
 
 function CapturedRow({ pieces, z }) {
-  const gap = 0.55;
+  const gap = 0.48;
   return pieces.map((p, i) => {
     const col = i % 8;
     const row = Math.floor(i / 8);
     const count = Math.min(pieces.length - row * 8, 8);
     const start = -((count - 1) * gap) / 2;
     const x = start + col * gap;
-    const zz = z + row * 0.5 * (z > 0 ? 1 : -1);
+    const outward = z > 0 ? 1 : -1;
+    const zz = z + row * 0.42 * outward;
     return (
-      <group key={`cap-${p.color}-${p.type}-${i}`} position={[x, 0.36, zz]} scale={0.68}>
+      <group key={`cap-${p.color}-${p.type}-${i}`} position={[x, 0.32, zz]} scale={0.5}>
         <Piece3D type={p.type} color={p.color} />
       </group>
     );
@@ -72,7 +73,7 @@ function BoardScene({
   }, [board, inCheck, turn]);
 
   const cameraZ = flipped ? -9.2 : 9.2;
-  const takes = useMemo(() => capturedPieces(history || []), [history]);
+  const offBoard = useMemo(() => capturedFromBoard(board), [board]);
 
   function clickSquare(sq, piece, e) {
     e?.stopPropagation?.();
@@ -193,7 +194,7 @@ function BoardScene({
       </mesh>
 
       <mesh position={[0, 0, 0]} receiveShadow>
-        <boxGeometry args={[9.8, 0.55, 12.6]} />
+        <boxGeometry args={[10.2, 0.55, 11.4]} />
         <meshStandardMaterial color="#4a2c14" roughness={0.45} metalness={0.08} />
       </mesh>
       <mesh position={[0, 0.28, 0]} receiveShadow>
@@ -201,14 +202,14 @@ function BoardScene({
         <meshStandardMaterial color="#3a2412" roughness={0.5} />
       </mesh>
       <mesh position={[0, -0.15, 0]} receiveShadow>
-        <boxGeometry args={[10.6, 0.35, 13.4]} />
+        <boxGeometry args={[11, 0.35, 12.2]} />
         <meshStandardMaterial color="#2a1a0e" roughness={0.6} />
       </mesh>
       {[
-        [-4.5, -5.8],
-        [4.5, -5.8],
-        [-4.5, 5.8],
-        [4.5, 5.8],
+        [-4.7, -5.3],
+        [4.7, -5.3],
+        [-4.7, 5.3],
+        [4.7, 5.3],
       ].map(([lx, lz], i) => (
         <mesh key={i} position={[lx, -0.55, lz]} castShadow>
           <cylinderGeometry args={[0.22, 0.28, 0.7, 12]} />
@@ -218,8 +219,8 @@ function BoardScene({
 
       {squares}
       {pieces}
-      <CapturedRow pieces={takes.whiteTook} z={5.15} />
-      <CapturedRow pieces={takes.blackTook} z={-5.15} />
+      <CapturedRow pieces={offBoard.b} z={4.48} />
+      <CapturedRow pieces={offBoard.w} z={-4.48} />
 
       <ContactShadows position={[0, -0.88, 0]} opacity={0.45} scale={16} blur={2.2} far={4} />
 
